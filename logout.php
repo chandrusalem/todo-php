@@ -1,6 +1,7 @@
 <?php
 
-    session_start();
+    // session_start();
+    require_once "config/session.php";
     $_SESSION = [];
     if(ini_get("session.user_cookies")){
         $params = session_get_cookie_params();

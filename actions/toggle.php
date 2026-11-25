@@ -1,6 +1,13 @@
 <?php
     require_once "../config/database.php";
-    $id = filter_input(INPUT_GET,"id", FILTER_VALIDATE_INT);
+    require_once "../config/auth.php";
+    if ($_SERVER["REQUEST_METHOD"] !== "POST") {
+        header("Location: ../index.php");
+        exit;
+    }
+    verifyCsrfToken();
+
+    $id = filter_input(INPUT_POST,"id", FILTER_VALIDATE_INT);
 
     if(!$id || $id < 1) {
         die("Invalid task ID");

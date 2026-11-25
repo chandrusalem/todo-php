@@ -1,17 +1,23 @@
 <?php
 
-    require_once "config/database.php";
-    $error = "";
+    require_once __DIR__ ."/config/session.php";
+    require_once __DIR__ ."/config/database.php";
+    require_once __DIR__ ."/config/csrf.php";
+    require_once __DIR__ ."/config/otp_service.php";
+    $message = "";
 
     if($_SERVER["REQUEST_METHOD"] == "POST"){
+        verifyCsrfToken();
         $name = trim($_POST["name"] ?? "");
         $email = strtolower(trim($_POST["email"] ??""));
         $password = $_POST["password"] ??"";
 
-        if($name === "" || $email === "" || $password === ""){
-            $error = "All fields are required";
+        if($name === "" || $email === "" || $password === "") {
+            $message = "All fields are required";
         }elseif(!filter_var($email, FILTER_VALIDATE_EMAIL)){
-            $error = "Enter a valid email address.";
+            $message = "Please enter valid registration details.";
+        }elseif(strlen($password) < 8 ){
+            $message = "Password must contain at least 8 characters.";
         }else{
             $check = $pdo->prepare("
                 SELECT id FROM users WHERE email = :email
@@ -19,22 +25,37 @@
             $check->execute([":email" => $email]);
 
             if($check->fetch()){
-                $error = "Email already registerd.";
+                $message = "Unable to register with these details.";
             }else{
-                $hashedPassword = password_hash(
-                    $password, PASSWORD_DEFAULT
-                );
-                $sql = "INSERT INTO users
-                    (name, email, password) VALUES (:name, :email, :password)
-                ";
-                $stmt = $pdo->prepare($sql);
-                $stmt->execute([
-                    ":name" => $name,
-                    ":email"=> $email,
-                    ":password"=> $hashedPassword
-                    ]);
-                
-                header("Location: login.php");
+                try{
+                    $hashedPassword = password_hash(
+                        $password, PASSWORD_DEFAULT
+                    );
+                    $sql = "INSERT INTO users
+                        (name, email, password) VALUES (:name, :email, :password)
+                    ";
+                    $stmt = $pdo->prepare($sql);
+                    $stmt->execute([
+                        ":name" => $name,
+                        ":email"=> $email,
+                        ":password"=> $hashedPassword
+                        ]);
+                    $userId = (int) $pdo->lastInsertId();
+                    $_SESSION["pending_user_id"] = $userId;
+                    if(sendUserOtp($userId, $email)){
+                        header("Location: verify-email.php");
+                        exit;
+                    }else{
+                        // Keep the unverified account.
+                        // The user can request another OTP.
+                        $message = "Account created. Email deliver failed. Please request another OTP.";
+
+                    }
+                }catch(PDOException $e){
+                    error_log($e->getMessage());
+                    // var_dump($e->getMessage());
+                    $message = "Registeration failed. Please try again.";
+                }
             }
         }
     }
@@ -49,13 +70,17 @@
 </head>
 <body>
     <h1>Create Account</h1>
-    <?php if($error !== ""): ?>
+    <?php if($message !== ""): ?>
         <p style="color:red">
-            <?= htmlspecialchars($error) ?>
+            <?= htmlspecialchars($message) ?>
         </p>
     <?php endif; ?>
 
     <form action="" method="POST">
+        <input
+            type="hidden"
+            name="csrf_token"
+            value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
         <input type="text" name="name" placeholder="Your name" maxlength="100" required>
         <br><br>
         <input type="email" name="email" placeholder="Enter Email address" maxlength="190" required>

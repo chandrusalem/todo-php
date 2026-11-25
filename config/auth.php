@@ -1,7 +1,9 @@
 <?php
-    if(session_start() === PHP_SESSION_ACTIVE){
-        session_start();
-    }
+    require_once __DIR__ ."/session.php";
+    require_once __DIR__ ."/csrf.php";
+    // if(session_start() === PHP_SESSION_ACTIVE){
+    //     session_start();
+    // }
     if(!isset($_SESSION["user_id"])){
         header("Location: login.php");
         exit;

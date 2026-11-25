@@ -1,5 +1,6 @@
 <?php
     require_once "config/database.php";
+    require_once "config/auth.php";
     $id = filter_input(INPUT_GET,"id", FILTER_VALIDATE_INT);
     if(!$id || $id < 1) {
         die("Invalid task ID.");

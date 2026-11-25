@@ -1,5 +1,6 @@
 <?php
-    session_start();
+    // session_start();
+    require_once "config/session.php";
     if(!isset($_SESSION["tasks"])){
         $_SESSION["tasks"] = [
             [

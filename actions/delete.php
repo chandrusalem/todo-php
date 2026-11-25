@@ -1,6 +1,15 @@
 <?php
+    require_once "../config/auth.php";
     require_once "../config/database.php";
-    $id = filter_input(INPUT_GET,"id", FILTER_VALIDATE_INT);
+    require_once "../config/csrf.php";
+
+    if($_SERVER["REQUEST_METHOD"] !== "POST"){
+        http_response_code(405);
+        exit("Mothod not allowed.");
+    }
+
+    verifyCsrfToken();
+    $id = filter_input(INPUT_POST,"id", FILTER_VALIDATE_INT);
 
     if(!$id || $id < 1) {
         die("Invalid task Id.");

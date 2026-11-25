@@ -7,18 +7,14 @@
     function createMailer(): PHPMailer{
         $mail = new PHPMailer(true);
         $mail->isSMTP();
-        // $mail->Host = getenv("MAIL_HOST");
-        $mail->Host = "smtp.gmail.com";
+        $mail->Host = getenv("MAIL_HOST");
         $mail->SMTPAuth = true;
-        // $mail->Username = getenv("MAIL_USERNAME");
-        $mail->Username = "chandrubsc213@gmail.com";
-        // $mail->Password = getenv("MAIL_PASSWORD");
-        $mail->Password = "oxiq afrj ljfw qhnz";
+        $mail->Username = getenv("MAIL_USERNAME");
+        $mail->Password = getenv("MAIL_PASSWORD");
         $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
         $mail->Port = 587;
         $mail->setFrom(
-            // getenv("MAIL_FROM"),
-            "chandrubsc213@gmail.com",
+            getenv("MAIL_FROM"),
             "My To-Do Application"
         );
 
